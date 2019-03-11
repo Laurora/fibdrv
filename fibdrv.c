@@ -24,19 +24,24 @@ static struct cdev *fib_cdev;
 static struct class *fib_class;
 static DEFINE_MUTEX(fib_mutex);
 
-static long long fib_sequence(long long k)
+static long long fib_sequence(long long n)
 {
     /* FIXME: use clz/ctz and fast algorithms to speed up */
-    long long f[k + 2];
-
-    f[0] = 0;
-    f[1] = 1;
-
-    for (int i = 2; i <= k; i++) {
-        f[i] = f[i - 1] + f[i - 2];
+    long long i, h, j, k, t;
+    i = h = 1;
+    j = k = 0;
+    while (n > 0) {
+        if (n % 2 == 1) {
+            t = j * h;
+            j = i * h + j * k + t;
+            i = i * k + t;
+        }
+        t = h * h;
+        h = 2 * k * h + t;
+        k = k * k + t;
+        n = (long long) n / 2;
     }
-
-    return f[k];
+    return j;
 }
 
 static int fib_open(struct inode *inode, struct file *file)
